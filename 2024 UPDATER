@@ -1,0 +1,111 @@
+<#
+.SYNOPSIS
+Unified PowerShell script to update various software and manage OWL firmware.
+
+.DESCRIPTION
+This script updates MS Paint, Photos, Snip Tool, Zoom Client, Aver U50 Document Scanner app,
+MS Office Desktop Apps, Chrome, Firefox, and checks the Okta Plugin. It also includes functionality to check
+the network connectivity of OWL devices and placeholders for digital signing.
+
+#>
+
+# Parameters
+param(
+    [string]$OwlDeviceIP = "192.168.1.100"
+)
+
+# Function to test device connectivity
+function Test-DeviceConnectivity {
+    param(
+        [string]$DeviceIP
+    )
+    $ping = Test-Connection -ComputerName $DeviceIP -Count 1 -Quiet
+    return $ping
+}
+
+# Function to update applications using winget
+function Update-Applications {
+    # Ensure winget is installed
+    if (-Not (Get-Command winget -ErrorAction SilentlyContinue)) {
+        Write-Host "winget is not installed. Please install it first."
+        exit
+    }
+
+    # Update MS Paint
+    winget upgrade Microsoft.Paint
+
+    # Update Photos
+    winget upgrade Microsoft.Photos
+
+    # Update Snip Tool
+    winget upgrade Microsoft.ScreenSketch
+
+    # Update Zoom
+    winget upgrade Zoom.Zoom
+
+    Write-Host "Applications have been updated successfully."
+}
+
+# Function to update Aver U50 Document Scanner app
+function Update-AverU50 {
+    $downloadUrl = "https://www.aver.com/download-link"  # Replace with actual URL
+    $installerPath = "C:\Temp\AverU50Installer.exe"
+
+    Invoke-WebRequest -Uri $downloadUrl -OutFile $installerPath
+    Start-Process -FilePath $installerPath -ArgumentList "/silent" -Wait
+
+    Write-Host "Aver U50 Document Scanner app has been updated."
+}
+
+# Function to update MS Office Desktop Apps
+function Update-MSOffice {
+    Start-Process -FilePath "C:\Program Files\Common Files\Microsoft Shared\ClickToRun\OfficeC2RClient.exe" -ArgumentList "updatestore=true" -Wait
+    Write-Host "MS Office apps have been updated."
+}
+
+# Function to update browsers
+function Update-Browsers {
+    # Update Chrome
+    winget upgrade Google.Chrome
+
+    # Update Firefox
+    winget upgrade Mozilla.Firefox
+
+    Write-Host "Browsers have been updated successfully."
+}
+
+# Function to check Okta Plugin
+function Check-OktaPlugin {
+    # For Chrome
+    $chromeExtensionId = "obkldkecplahdcfoenkbldakmgfoajdm"  # Example extension ID for Okta
+    Start-Process "chrome://extensions/?id=$chromeExtensionId"
+
+    # For Firefox
+    $firefoxExtensionUrl = "https://addons.mozilla.org/en-US/firefox/addon/okta-secure-web-authentication/"
+    Start-Process "firefox.exe" -ArgumentList $firefoxExtensionUrl
+
+    Write-Host "Check the browser extension pages to ensure the Okta plugin is up to date."
+}
+
+# Main script execution
+if (Test-DeviceConnectivity -DeviceIP $OwlDeviceIP) {
+    Write-Host "OWL Device is reachable. Proceed with the firmware update using the OWL app."
+} else {
+    Write-Host "OWL Device is not reachable. Check the network connection and try again."
+}
+
+# Call update functions
+Update-Applications
+Update-AverU50
+Update-MSOffice
+Update-Browsers
+Check-OktaPlugin
+
+# Placeholder for digital signing
+# To sign the script, you will need a code signing certificate.
+# Once you have the certificate, you can use the Set-AuthenticodeSignature cmdlet to sign the script.
+# Example:
+# $cert = Get-ChildItem -Path Cert:\CurrentUser\My -CodeSigningCert | Select-Object -First 1
+# Set-AuthenticodeSignature -FilePath "path-to-your-script.ps1" -Certificate $cert
+
+Write-Host "All updates and checks are complete."
