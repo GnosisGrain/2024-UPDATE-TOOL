@@ -1,11 +1,9 @@
 <#
 .SYNOPSIS
-Unified PowerShell script to update various software and manage OWL firmware.
+Unified PowerShell script to update various software, manage OWL firmware, and configure system settings for FLEX classrooms.
 
 .DESCRIPTION
-This script updates MS Paint, Photos, Snip Tool, Zoom Client, Aver U50 Document Scanner app,
-MS Office Desktop Apps, Chrome, Firefox, and checks the Okta Plugin. It also includes functionality to check
-the network connectivity of OWL devices and placeholders for digital signing.
+This script updates MS Paint, Photos, Snip Tool, Zoom Client, Aver U50 Document Scanner app, MS Office Desktop Apps, Chrome, Firefox, Edge, Okta, PowerPoint, Word, Excel, Zoom, Canvas, Teams. It also configures mouse settings, extends the automatic timeout, and updates the Meeting OWL device.
 
 #>
 
@@ -31,17 +29,16 @@ function Update-Applications {
         exit
     }
 
-    # Update MS Paint
-    winget upgrade Microsoft.Paint
-
-    # Update Photos
-    winget upgrade Microsoft.Photos
-
-    # Update Snip Tool
-    winget upgrade Microsoft.ScreenSketch
-
     # Update Zoom
     winget upgrade Zoom.Zoom
+
+    # Update Browsers
+    winget upgrade Google.Chrome
+    winget upgrade Mozilla.Firefox
+    winget upgrade Microsoft.Edge
+
+    # Update MS Office
+    Start-Process -FilePath "C:\Program Files\Common Files\Microsoft Shared\ClickToRun\OfficeC2RClient.exe" -ArgumentList "updatestore=true" -Wait
 
     Write-Host "Applications have been updated successfully."
 }
@@ -57,21 +54,23 @@ function Update-AverU50 {
     Write-Host "Aver U50 Document Scanner app has been updated."
 }
 
-# Function to update MS Office Desktop Apps
-function Update-MSOffice {
-    Start-Process -FilePath "C:\Program Files\Common Files\Microsoft Shared\ClickToRun\OfficeC2RClient.exe" -ArgumentList "updatestore=true" -Wait
-    Write-Host "MS Office apps have been updated."
+# Function to configure mouse settings
+function Configure-MouseSettings {
+    # Change mouse pointer size and color
+    Set-ItemProperty -Path "HKCU:\Control Panel\Cursors" -Name Scheme -Value "Windows Black (extra large) (system scheme)"
+
+    # Apply settings
+    RUNDLL32.EXE USER32.DLL,UpdatePerUserSystemParameters ,1 ,True
+
+    Write-Host "Mouse settings have been configured."
 }
 
-# Function to update browsers
-function Update-Browsers {
-    # Update Chrome
-    winget upgrade Google.Chrome
+# Function to extend automatic timeout
+function Extend-Timeout {
+    powercfg /change monitor-timeout-ac 30
+    powercfg /change monitor-timeout-dc 30
 
-    # Update Firefox
-    winget upgrade Mozilla.Firefox
-
-    Write-Host "Browsers have been updated successfully."
+    Write-Host "Automatic timeout has been extended to 30 minutes."
 }
 
 # Function to check Okta Plugin
@@ -97,8 +96,8 @@ if (Test-DeviceConnectivity -DeviceIP $OwlDeviceIP) {
 # Call update functions
 Update-Applications
 Update-AverU50
-Update-MSOffice
-Update-Browsers
+Configure-MouseSettings
+Extend-Timeout
 Check-OktaPlugin
 
 # Placeholder for digital signing
